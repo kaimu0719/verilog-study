@@ -1,3 +1,5 @@
+`default_nettype none
+
 module display_fsm (
   input  wire      clk,
   input  wire      rst_n,
@@ -35,6 +37,12 @@ module display_fsm (
   localparam [2:0] PIXEL_WAIT_BUSY  = 3'd4;
   localparam [2:0] DONE             = 3'd5;
 
+  vram u_vram (
+    .clk      (clk),
+    .addr     (vram_addr),
+    .data_out (vram_word)
+  );
+
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       spi_start   <= 1'b0;
@@ -45,7 +53,7 @@ module display_fsm (
       y_count     <= 9'b0;
       byte_select <= 1'b0;
       state       <= IDLE;
-    end else begin
+    end else begi
       case (state)
         IDLE: begin
           if (init_done == 1) begin
@@ -56,11 +64,12 @@ module display_fsm (
         end
 
         PIXEL_LOAD: begin
-          spi_data <= byte_to_send;
+          // spi_data <= byte_to_send;
           state    <= PIXEL_SEND;
         end
 
         PIXEL_SEND: begin
+          spi_data  <= byte_to_send;
           spi_start <= 1'b1;
           state     <= PIXEL_WAIT_START;
         end

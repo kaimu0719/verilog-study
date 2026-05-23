@@ -1,5 +1,6 @@
 #!/bin/bash
 source ~/oss-cad-suite/environment
+
 set -e   # ← 重要: どこかでエラーが出たら、そこで止まる
 
 # 設定: トップモジュール名と、ソースファイル一覧
@@ -12,11 +13,10 @@ yosys -p "read_verilog ${SOURCES}; synth_gowin -top ${TOP} -json ${TOP}.json"
 
 # 工程2: 配置配線
 echo "=== Place and Route ==="
-nextpnr-himbaechel --json ${TOP}.json \
-                   --write ${TOP}_pnr.json \
-                   --device GW1NR-LV9QN88PC6/I5 \
-                   --vopt family=GW1N-9C \
-                   --vopt cst=top.cst
+nextpnr-gowin --json ${TOP}.json \
+              --write ${TOP}_pnr.json \
+              --device GW1NR-LV9QN88PC6/I5 \
+              --cst top.cst
 
 # 工程3: パッキング
 echo "=== Pack ==="
