@@ -38,8 +38,11 @@ module display_fsm (
   localparam [2:0] DONE             = 3'd5;
 
   vram u_vram (
-    .clk      (clk),
-    .addr     (vram_addr),
+    .clk(clk),
+    .addr_a(13'b0),
+    .data_in(16'h0000),
+    .we(1'b0),
+    .addr_b(vram_addr),
     .data_out (vram_word)
   );
 
@@ -53,7 +56,7 @@ module display_fsm (
       y_count     <= 9'b0;
       byte_select <= 1'b0;
       state       <= IDLE;
-    end else begi
+    end else begin
       case (state)
         IDLE: begin
           if (init_done == 1) begin
