@@ -42,8 +42,9 @@ module display_fsm (
     .addr_a(13'b0),
     .data_in(16'h0000),
     .we(1'b0),
+    .data_out_a(), // display_fsm は使わないので空
     .addr_b(vram_addr),
-    .data_out (vram_word)
+    .data_out_b(vram_word)
   );
 
   always @(posedge clk or negedge rst_n) begin
