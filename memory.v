@@ -24,7 +24,7 @@ module memory (
   wire [15:0] ram_data_out;
   ram u_ram (
     .clk(clk),
-    .addr(addressM[13:0]),
+    .addr(addressM[11:0]),
     .data_in(inM),
     .we(ram_we),
     .data_out(ram_data_out)

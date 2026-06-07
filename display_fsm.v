@@ -5,6 +5,10 @@ module display_fsm (
   input  wire      rst_n,
   input  wire      init_done,
 
+  // vramへの接続
+  input  wire [15:0] vram_word,
+  output wire [12:0] vram_addr,
+
   // spi_masterへの接続
   input  wire      spi_busy,
   output reg       spi_start,
@@ -23,8 +27,7 @@ module display_fsm (
   reg       byte_select;
 
   // 9bit + 4bit = 13bit
-  wire [12:0] vram_addr = {y_count[8:0], x_count[7:4]};
-  wire [15:0] vram_word; // 16ピクセルのvramデータ
+  assign vram_addr = {y_count[8:0], x_count[7:4]};
 
   wire        pixel_bit    = vram_word[x_count[3:0]];
   wire [15:0] pixel_color  = pixel_bit ? 16'hFFFF : 16'h0000;
@@ -36,16 +39,6 @@ module display_fsm (
   localparam [2:0] PIXEL_WAIT_START = 3'd3;
   localparam [2:0] PIXEL_WAIT_BUSY  = 3'd4;
   localparam [2:0] DONE             = 3'd5;
-
-  vram u_vram (
-    .clk(clk),
-    .addr_a(13'b0),
-    .data_in(16'h0000),
-    .we(1'b0),
-    .data_out_a(), // display_fsm は使わないので空
-    .addr_b(vram_addr),
-    .data_out_b(vram_word)
-  );
 
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
