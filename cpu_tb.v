@@ -2,7 +2,7 @@ module cpu_tb;
 
   reg         clk;
   reg         rst_n;
-  wire [15:0] instruction;
+  reg  [15:0] instruction;
   reg  [15:0] inM;
   wire [15:0] outM;
   wire [14:0] addressM;
@@ -26,7 +26,10 @@ module cpu_tb;
     .pc(pc)
   );
 
-  assign instruction = rom_mem[pc[3:0]];
+  always @(posedge clk) begin
+    instruction <= rom_mem[pc[3:0]];
+  end
+  // assign instruction = rom_mem[pc[3:0]];
 
   // 書き込み: writeM=1のとき
   always @(posedge clk) begin
@@ -35,13 +38,9 @@ module cpu_tb;
     end
   end
 
-  // 読み出し:アドレスから常に値を返す。
-  // 非同期な読み出し:addressMが変わったら即座にinMを更新
-  // これって
-  // assign inM = data_mem[addressM[3:0]];
-  // じゃだめなのか？
-  always @(*) begin
-    inM = data_mem[addressM[3:0]];
+  // 同期読み出し: posedge で addressM 番地の値を読み、1サイクル遅れて inM に出す(実機 BRAM と同じ遅延)
+  always @(posedge clk) begin
+    inM <= data_mem[addressM[3:0]];
   end
 
   initial clk = 0;
@@ -54,12 +53,12 @@ module cpu_tb;
 
     // ROM に test.hack の中身を直接書く
     rom_mem[0] = 16'b0000_0000_0000_0101; // @5
-    rom_mem[1] = 16'b1110_1100_0001_0000; // D=A   → D=5
-    rom_mem[2] = 16'b0000_0000_0000_1000; // @8    → A=8(END の番地)
-    rom_mem[3] = 16'b1110_0011_0000_0010; // D;JEQ → D=5≠0、飛ばない
-    rom_mem[4] = 16'b0000_0000_0000_0001; // @1    → A=1
-    rom_mem[5] = 16'b1110_0011_0000_1000; // M=D   → M[1]=5
-    rom_mem[6] = 16'b0000_0000_0000_0110; // @6    → A=6(無限ループの番地)
+    rom_mem[1] = 16'b1110_1100_0001_0000; // D=A   → D=0x0005
+    rom_mem[2] = 16'b0000_0000_0000_0111; // @7
+    rom_mem[3] = 16'b1110_0011_0000_1000; // M=D   → M[7]=5
+    rom_mem[4] = 16'b0000_0000_0000_0111; // @7
+    rom_mem[5] = 16'b1111_1101_1100_1000; // M=M+1 → M[7]=5+1=6
+    rom_mem[6] = 16'b0000_0000_0000_0110; // @6    → A=8(無限ループの番地)
     rom_mem[7] = 16'b1110_1010_1000_0111; // 0;JMP → pc=6 に飛ぶ(無限ループ)
 
     // メモリを初期化
@@ -73,11 +72,15 @@ module cpu_tb;
     rst_n = 1;
 
     // 4命令を実行するのに十分な時間を確保
-    #100
+    #200
 
     // 結果を確認
-    $display("M[1] = %d (期待値: 5、JEQが飛ばなかった証拠)", data_mem[1]);
-    $display("M[0] = %d (期待値: 0、書き換わってないこと)", data_mem[0]);
+    $display("M[7] = %h (期待値: 0006, M=M+1のリードモディファイライト検証)", data_mem[7]);
+    if (data_mem[7] === 16'h0006) begin
+      $display("PASS: D=M が inM 経路を正しく通った");
+    end else begin
+      $display("FAIL: inM が間に合っていない可能性");
+    end
 
     $finish;
   end

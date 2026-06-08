@@ -9,6 +9,17 @@ module cpu (
   output wire [14:0] pc
 );
 
+  localparam READ = 1'd0;
+  localparam EXEC = 1'd1;
+
+  reg state;
+
+  always @(posedge clk) begin
+    if      (~rst_n)        state <= READ;
+    else if (state == READ) state <= EXEC;
+    else                    state <= READ;
+  end
+
   wire is_c = instruction[15];
   wire is_a = ~instruction[15];
 
@@ -36,7 +47,7 @@ module cpu (
   wire [15:0] a_in = is_c ? alu_out : instruction;
 
   // Aレジスタのロード条件
-  wire a_load = is_a | (is_c & dest_a);
+  wire a_load = (state == EXEC) & (is_a | (is_c & dest_a));
 
   // Aレジスタのインスタンス化
   register a_reg (
@@ -69,7 +80,7 @@ module cpu (
   );
 
   // Dレジスタのロード条件
-  wire d_load = is_c & dest_d;
+  wire d_load = is_c & dest_d & (state == EXEC);
 
   // Dレジスタのインスタンス化
   register d_reg (
@@ -91,8 +102,8 @@ module cpu (
   pc cpu_pc (
     .clk(clk),
     .reset(~rst_n),
-    .load(jump),
-    .inc(~jump),
+    .load((jump & (state == EXEC))),
+    .inc((~jump & (state == EXEC))),
     .in(a_value[14:0]),
     .out(pc)
   );
@@ -100,6 +111,6 @@ module cpu (
   // メモリ関連の出力
   assign outM = alu_out;
   assign addressM = a_value[14:0];
-  assign writeM = is_c & dest_m;
+  assign writeM = is_c & dest_m & (state == EXEC);
 
 endmodule

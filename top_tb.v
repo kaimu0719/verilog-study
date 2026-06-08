@@ -61,7 +61,7 @@ module top_tb;
 
   // タイムアウト監視（独立した initial ブロック）
   initial begin
-    #50000000;   // 2000万 ns = 200万サイクル(周期10ns)。
+    #50000000;   // 5000万 ns = 500万サイクル(周期10ns)。
     $display("--- VRAM fill check ---");
     $display("  mem[0]    = %h (expect FFFF)", u_top.u_memory.u_vram.mem[0]);
     $display("  mem[100]  = %h (expect FFFF)", u_top.u_memory.u_vram.mem[100]);

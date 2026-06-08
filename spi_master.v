@@ -12,7 +12,7 @@ module spi_master (
 );
 
   // SCLK の半周期 = clk 何サイクル分か
-  parameter SCLK_HALF = 1;
+  parameter SCLK_HALF = 2;
 
   // 状態の定義
   localparam IDLE       = 2'd0;
